@@ -1,0 +1,55 @@
+---
+title: "Visualization 1"
+author: "Jonathan Morris"
+date: "2026-10-01"
+output: github_document
+---
+
+# Load Packages
+```{r}
+library(tidyverse)
+library(ggridges)
+
+# Load Data:
+library(p8105.datasets)
+data("weather_df")
+```
+
+# Make a scatterplot:
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, col = name)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(se = F)
+```
+
+# Faceting:
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, col = name)) +
+  geom_point(alpha = 0.5) +
+  facet_grid(name ~ .)
+```
+# Option + Cmd + i creates a new cell.
+
+```{r}
+weather_df |> 
+  ggplot(aes(x = date, y = tmax, col = name)) +
+  geom_point(aes(size = prcp), alpha = 0.25) +
+  facet_grid(. ~ name)
+```
+Plot of central park tmax v tmin only, and convert temp to F:
+```{r}
+celsius_to_fahrenheit <- function(celsius) {
+  fahrenheit <- (celsius * 9/5) + 32
+  return(fahrenheit)
+}
+
+weather_df |> 
+  filter(name == "CentralPark_NY") |> 
+  mutate(tmax_f = celsius_to_fahrenheit(tmax),
+         tmin_f = celsius_to_fahrenheit(tmin)) |> 
+  ggplot(aes(x = tmin_f, y = tmax_f)) +
+  geom_point()
+```
+
