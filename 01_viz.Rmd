@@ -9,6 +9,7 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(ggridges)
+library(hexbin)
 
 # Load Data:
 library(p8105.datasets)
@@ -34,7 +35,7 @@ weather_df |>
 
 ```{r}
 weather_df |> 
-  ggplot(aes(x = date, y = tmax, col = name)) +
+  ggplot(aes(x = date, y = tmin, col = name)) +
   geom_point(aes(size = prcp), alpha = 0.25) +
   facet_grid(. ~ name)
 ```
@@ -47,9 +48,72 @@ celsius_to_fahrenheit <- function(celsius) {
 
 weather_df |> 
   filter(name == "CentralPark_NY") |> 
-  mutate(tmax_f = celsius_to_fahrenheit(tmax),
-         tmin_f = celsius_to_fahrenheit(tmin)) |> 
-  ggplot(aes(x = tmin_f, y = tmax_f)) +
+  mutate(tmax = celsius_to_fahrenheit(tmax),
+         tmin = celsius_to_fahrenheit(tmin)) |> 
+  ggplot(aes(x = tmin, y = tmax)) +
   geom_point()
 ```
+# Make a hex plot:
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex()
+```
+
+
+## Univariate plots:
+```{r}
+weather_df |> 
+  mutate(tmax = celsius_to_fahrenheit(tmax),
+         tmin = celsius_to_fahrenheit(tmin)) |> 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram() +
+  facet_grid(. ~ name)
+```
+
+Density plots are great!!
+```{r}
+weather_df |> 
+  mutate(tmax = celsius_to_fahrenheit(tmax),
+         tmin = celsius_to_fahrenheit(tmin)) |> 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_density(alpha = 0.3)
+```
+
+# Boxplots:
+```{r}
+weather_df |> 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_boxplot()
+```
+
+# Violin plot:
+```{r}
+weather_df |> 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_violin()
+```
+
+
+# Ridge Plots:
+
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmax, y = name)) +
+  geom_density_ridges()
+```
+
+
+## Save a few plots.
+```{r}
+ggp_weather = weather_df |> 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp), alpha = 0.5) +
+  facet_grid(. ~ name)
+
+ggp_weather
+
+ggsave("ggp_weather.pdf", ggp_weather)
+```
+
 
