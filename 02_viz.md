@@ -170,7 +170,7 @@ ggp_prcp_density <-
   weather_df |> 
   filter(prcp > 0) |> 
   ggplot(aes(x = prcp, fill = name)) +
-  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  scale_fill_manual(values = wes_palette("Darjeeling1")) +
   geom_density(alpha = 0.5) 
   
 
@@ -191,3 +191,84 @@ ggp_seasonal <-
 ![](02_viz_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ## Data Manipulation:
+
+### Factors:
+
+``` r
+weather_df |> 
+  mutate(name = fct_relevel(name, c("Molokai_HI", "CentralPark_NY", "Waterhole_WA"))) |> 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_boxplot()
+```
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_boxplot()`).
+
+![](02_viz_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+weather_df |> 
+  mutate(name = fct_reorder(name, tmax)) |> 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_boxplot()
+```
+
+    ## Warning: There was 1 warning in `mutate()`.
+    ## ℹ In argument: `name = fct_reorder(name, tmax)`.
+    ## Caused by warning:
+    ## ! `fct_reorder()` removing 17 missing values.
+    ## ℹ Use `.na_rm = TRUE` to silence this message.
+    ## ℹ Use `.na_rm = FALSE` to preserve NAs.
+    ## Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_boxplot()`).
+
+![](02_viz_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
+
+## Layered distribution plot:
+
+``` r
+# My Method:
+weather_df |> 
+  ggplot() +
+  geom_density(aes(x = tmax, fill = "Max Temp"), alpha = 0.5) +
+  geom_density(aes(x = tmin, fill = "Min Temp"), alpha = 0.5) +
+  facet_grid(. ~ name) +
+  labs(
+    x = "Temperature (C)",
+    title = "Distribution of Max and Min Temps by Location",
+    fill = "Temp"
+  ) 
+```
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_density()`).
+    ## Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_density()`).
+
+![](02_viz_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+# Jeff Method:
+weather_df |> 
+  select(name, tmax, tmin) |> 
+  pivot_longer(
+    tmax:tmin,
+    names_to = "observation",
+    values_to = "temp"
+  ) |> 
+  ggplot(aes(x = temp, fill = observation)) + 
+  geom_density(alpha = 0.5) +
+  labs(
+    x = "Temperature (C)",
+    title = "Distribution of Max and Min Temps by Location",
+    fill = "Temp"
+  ) +
+  facet_grid(. ~ name) 
+```
+
+    ## Warning: Removed 34 rows containing non-finite outside the scale range
+    ## (`stat_density()`).
+
+![](02_viz_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+
+## Back to pups df:

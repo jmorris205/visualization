@@ -112,7 +112,7 @@ ggp_prcp_density <-
   weather_df |> 
   filter(prcp > 0) |> 
   ggplot(aes(x = prcp, fill = name)) +
-  scale_color_manual(values = wes_palette("Darjeeling1")) +
+  scale_fill_manual(values = wes_palette("Darjeeling1")) +
   geom_density(alpha = 0.5) 
   
 
@@ -127,3 +127,55 @@ ggp_seasonal <-
 
 
 ## Data Manipulation:
+
+### Factors:
+```{r}
+weather_df |> 
+  mutate(name = fct_relevel(name, c("Molokai_HI", "CentralPark_NY", "Waterhole_WA"))) |> 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_boxplot()
+
+weather_df |> 
+  mutate(name = fct_reorder(name, tmax)) |> 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_boxplot()
+```
+
+## Layered distribution plot:
+```{r}
+# My Method:
+weather_df |> 
+  ggplot() +
+  geom_density(aes(x = tmax, fill = "Max Temp"), alpha = 0.5) +
+  geom_density(aes(x = tmin, fill = "Min Temp"), alpha = 0.5) +
+  facet_grid(. ~ name) +
+  labs(
+    x = "Temperature (C)",
+    title = "Distribution of Max and Min Temps by Location",
+    fill = "Temp"
+  ) 
+
+# Jeff Method:
+weather_df |> 
+  select(name, tmax, tmin) |> 
+  pivot_longer(
+    tmax:tmin,
+    names_to = "observation",
+    values_to = "temp"
+  ) |> 
+  ggplot(aes(x = temp, fill = observation)) + 
+  geom_density(alpha = 0.5) +
+  labs(
+    x = "Temperature (C)",
+    title = "Distribution of Max and Min Temps by Location",
+    fill = "Temp"
+  ) +
+  facet_grid(. ~ name) 
+```
+
+## Back to pups df:
+```{r}
+
+```
+
+
