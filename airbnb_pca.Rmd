@@ -1,0 +1,188 @@
+---
+title: "Case Study"
+output: github_document
+date: "2026-10-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Packages
+```{r}
+library(p8105.datasets)
+library(tidyverse)
+library(longpca)
+```
+
+
+## Load Data
+```{r}
+data("nyc_airbnb")
+```
+
+# Make some plots:
+
+## Most expensive airbnbs?
+```{r}
+nyc_airbnb |> 
+  group_by(neighbourhood_group, neighbourhood) |> 
+  summarize(price_m = mean(price, na.rm = T)) |> 
+  arrange(desc(price_m)) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = neighbourhood, y = price_m, color = neighbourhood_group)) +
+  geom_point()
+```
+
+## Longpca?
+```{r}
+## Specify PCA
+formula = 1 ~ (neighbourhood_group & neighbourhood)*(name)
+im = make_interaction_model(nyc_airbnb, formula, parse_text = TRUE, to_lower = TRUE)
+
+## Filter Text
+### Create neighborhood vector:
+neighbourhood_list <- nyc_airbnb |> 
+  pull(neighbourhood) |> 
+  tolower() |> 
+  str_split(pattern = " ") |> 
+  unlist() |> 
+  unique() |> 
+  c("stuy", "bedstuy", "bk", "nyc", "bedford")
+
+im$column_universe = im$column_universe |> 
+  anti_join(tidytext::stop_words, by = c("token"="word")) |> 
+  filter(!(token %in% neighbourhood_list))
+im = im |> subset_im()
+im = core(im, core_threshold = 5)
+diagnose(im)
+
+# Run PCA
+pcs = pca(im, k = 6)
+pca = rotate(pcs)
+
+streaks(pca)
+```
+## Plot PC1:
+```{r}
+## Rows/cols with high loadings:
+pca$row_features |> 
+  arrange(desc(vpc_1_rows)) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = reorder(neighbourhood, -vpc_1_rows), y = vpc_1_rows, fill = neighbourhood_group)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Neighbourhood", y = "VPC 1", fill = "Neighbourhood Group")
+
+pca$column_features |> 
+  arrange(desc(vpc_1_columns))
+
+## Rows/cols with low loadings:
+pca$row_features |> 
+  arrange(vpc_1_rows) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = reorder(neighbourhood, vpc_1_rows), y = vpc_1_rows, fill = neighbourhood_group)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Neighbourhood", y = "VPC 1", fill = "Neighbourhood Group")
+
+pca$column_features |> 
+  arrange(vpc_1_columns)
+```
+
+
+
+## Plot PC2:
+```{r}
+## Rows/cols with high loadings:
+pca$row_features |> 
+  arrange(desc(vpc_2_rows)) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = reorder(neighbourhood, -vpc_2_rows), y = vpc_2_rows, fill = neighbourhood_group)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Neighbourhood", y = "VPC 2", fill = "Neighbourhood Group")
+
+pca$column_features |> 
+  arrange(desc(vpc_2_columns))
+
+## Rows/cols with low loadings:
+pca$row_features |> 
+  arrange(vpc_2_rows) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = reorder(neighbourhood, vpc_2_rows), y = vpc_2_rows, fill = neighbourhood_group)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Neighbourhood", y = "VPC 1", fill = "Neighbourhood Group")
+
+pca$column_features |> 
+  arrange(vpc_2_columns)
+```
+
+## Plot PC3:
+```{r}
+## Rows/cols with high loadings:
+pca$row_features |> 
+  arrange(desc(vpc_3_rows)) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = reorder(neighbourhood, -vpc_3_rows), y = vpc_3_rows, fill = neighbourhood_group)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Neighbourhood", y = "VPC 3", fill = "Neighbourhood Group")
+
+pca$column_features |> 
+  arrange(desc(vpc_3_columns))
+
+## Rows/cols with low loadings:
+pca$row_features |> 
+  arrange(vpc_3_rows) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = reorder(neighbourhood, vpc_3_rows), y = vpc_3_rows, fill = neighbourhood_group)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Neighbourhood", y = "VPC 1", fill = "Neighbourhood Group")
+
+pca$column_features |> 
+  arrange(vpc_3_columns)
+```
+
+
+## Plot PC4:
+```{r}
+## Rows/cols with high loadings:
+pca$row_features |> 
+  arrange(desc(vpc_4_rows)) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = reorder(neighbourhood, -vpc_4_rows), y = vpc_4_rows, fill = neighbourhood_group)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Neighbourhood", y = "VPC 3", fill = "Neighbourhood Group")
+
+pca$column_features |> 
+  arrange(desc(vpc_4_columns))
+
+## Rows/cols with low loadings:
+pca$row_features |> 
+  arrange(vpc_4_rows) |> 
+  head(n = 10) |> 
+  ggplot(aes(x = reorder(neighbourhood, vpc_4_rows), y = vpc_4_rows, fill = neighbourhood_group)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Neighbourhood", y = "VPC 1", fill = "Neighbourhood Group")
+
+pca$column_features |> 
+  arrange(vpc_4_columns)
+```
+
+
+## Visualize price more:
+```{r}
+nyc_airbnb |> 
+  filter(neighbourhood_group == "Manhattan") |> 
+  filter(room_type == "Entire home/apt") |> 
+  filter(price < 500) |> 
+  ggplot(aes(x = lat, y = long, color = price)) +
+  geom_point(alpha = 0.5)
+```
+
+
