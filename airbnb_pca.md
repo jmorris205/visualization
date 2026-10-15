@@ -22,6 +22,13 @@ library(tidyverse)
 
 ``` r
 library(longpca)
+library(sf)
+```
+
+    ## Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE
+
+``` r
+library(ggspatial)
 ```
 
 ## Load Data
@@ -414,3 +421,41 @@ nyc_airbnb |>
 ```
 
 ![](airbnb_pca_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+pca$row_features |> 
+  full_join(nyc_airbnb, by = c("neighbourhood_group", "neighbourhood")) |> 
+  filter(neighbourhood_group == "Manhattan") |> 
+  #filter(room_type == "Entire home/apt") |> 
+  #filter(price < 500) |> 
+  ggplot(aes(x = lat, y = long, color = vpc_1_rows)) +
+  geom_point(alpha = 0.5)
+```
+
+![](airbnb_pca_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+
+``` r
+pca$row_features |> 
+  mutate(across(starts_with("vpc_"), ~ as.vector(scale(.x)))) |> 
+  full_join(nyc_airbnb, by = c("neighbourhood_group", "neighbourhood")) |> 
+  pivot_longer(cols = contains("vpc"), names_to = "vpc", values_to = "loading") |> 
+  filter(neighbourhood_group != "Staten Island") |> 
+  filter(loading < quantile(loading, 0.25, na.rm = T) | loading > quantile(loading, 0.85, na.rm = T)) |> 
+  rename(lat = long, long = lat) |> 
+  ggplot(aes(x = long, y = lat, color = loading)) +
+  annotation_map_tile(type = "osm", zoomin = 0) +
+  geom_point(alpha = 0.1) +
+  coord_sf(crs = 4326) +
+  facet_wrap(. ~ vpc)
+```
+
+    ## Loading required namespace: raster
+
+    ## Zoom: 11
+    ## Zoom: 11
+    ## Zoom: 11
+    ## Zoom: 11
+    ## Zoom: 11
+    ## Zoom: 11
+
+![](airbnb_pca_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
